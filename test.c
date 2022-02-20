@@ -8,6 +8,7 @@ int main(int argc, char *argv[]) {
   fs_print_error();
   
   write_file_at(f1, "MZ", 2, BEGINNING_OF_FILE, 0L);
+  // should catch error here
   fs_print_error();
   
   write_file_at(f1, "Z", 1, BEGINNING_OF_FILE, 1L);
@@ -20,6 +21,7 @@ int main(int argc, char *argv[]) {
   fs_print_error();
   
   write_file_at(f1, "M", 1, BEGINNING_OF_FILE, 0L);
+  // should catch error here
   fs_print_error();
   
   f3=open_file("three.dat");
@@ -32,15 +34,16 @@ int main(int argc, char *argv[]) {
   fs_print_error();
   
   write_file_at(f3, "Z", 1, END_OF_FILE, -9L);
+  // should catch error here
   fs_print_error();
   
   close_file(f1);
-  fs_print_error();
+  //fs_print_error();
   close_file(f2);
-  fs_print_error();
+  //fs_print_error();
   close_file(f3);
-  fs_print_error();
+  //fs_print_error();
   
-  system("rm one.dat two.dat three.dat");
+  //system("rm one.dat two.dat three.dat");
   return 0;
 }
