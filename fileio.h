@@ -3,7 +3,7 @@
 #include <string.h>
 
 // filesystem error code
-typedef enum  {
+typedef enum {
   NONE, 
   OPEN_FAILED,
   CLOSE_FAILED,

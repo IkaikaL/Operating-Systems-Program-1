@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "fileio.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]){
   File f1, f2, f3;
 
   f1=open_file("one.dat");
@@ -44,6 +44,6 @@ int main(int argc, char *argv[]) {
   close_file(f3);
   //fs_print_error();
   
-  //system("rm one.dat two.dat three.dat");
+  system("rm one.dat two.dat three.dat");
   return 0;
 }
