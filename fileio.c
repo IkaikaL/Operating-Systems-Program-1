@@ -3,28 +3,24 @@
 #include <string.h>
 #include "fileio.h"
 
-
 //
 // GLOBALS
 //
 
-
 FSError fserror;
-
 
 //
 // private functions
 //
 
-
 static int seek_file(File file, SeekAnchor start, long offset) {
   if (! file->fp || (start != BEGINNING_OF_FILE && 
-               start != CURRENT_POSITION && start != END_OF_FILE)) { //if file isnt valid or seek anchor isnt valid return 0
+	       start != CURRENT_POSITION && start != END_OF_FILE)) {
     return 0;
   }
   else {
-    if (!fseek(file->fp, offset, start == BEGINNING_OF_FILE ? SEEK_SET : 
-                (start == END_OF_FILE ? SEEK_END : SEEK_CUR))) { //
+    if (! fseek(file->fp, offset, start == BEGINNING_OF_FILE ? SEEK_SET : 
+		(start == END_OF_FILE ? SEEK_END : SEEK_CUR))) {
       return 1;
     }
     else {
@@ -33,11 +29,9 @@ static int seek_file(File file, SeekAnchor start, long offset) {
   }
 }
 
-
 //
 // public functions
 //
-
 
 // open or create a file with pathname 'name' and return a File
 // handle.  The file is always opened with read/write access. If the
@@ -45,7 +39,6 @@ static int seek_file(File file, SeekAnchor start, long offset) {
 // otherwise to NONE.
 File open_file(char *name) {
   File ptr = malloc(sizeof(FileInternal));
-
 
   fserror=NONE;
   // try to open existing file
@@ -61,7 +54,6 @@ File open_file(char *name) {
   return ptr;
 }
 
-
 // close a 'file'.  If the close operation fails, the global 'fserror'
 // is set to CLOSE_FAILED, otherwise to NONE.
 void close_file(File file) {
@@ -74,18 +66,15 @@ void close_file(File file) {
   free(file);
 }
 
-
 // read at most 'num_bytes' bytes from 'file' into the buffer 'data',
 // starting 'offset' bytes from the 'start' position.  The starting
 // position is BEGINNING_OF_FILE, CURRENT_POSITION, or END_OF_FILE. If
 // the read operation fails, the global 'fserror' is set to READ_FAILED,
 // otherwise to NONE.
 unsigned long read_file_from(File file, void *data, unsigned long num_bytes, 
-                             SeekAnchor start, long offset) {
-
+			     SeekAnchor start, long offset) {
 
   unsigned long bytes_read=0L;
-
 
   fserror=NONE;
   if (! file->fp || ! seek_file(file, start, offset)) {
@@ -109,36 +98,48 @@ unsigned long read_file_from(File file, void *data, unsigned long num_bytes,
 // reason, the global 'fserror' is set to WRITE_FAILED, otherwise to
 // NONE.
 unsigned long write_file_at(File file, void *data, unsigned long num_bytes, 
-                             SeekAnchor start, long offset) {
+			     SeekAnchor start, long offset) {
   unsigned long bytes_written=0L;
+  
+  long global_offset = 0L;
+  
+  // calculate global_offset (offset from the beginning of the file)
+  if (start == BEGINNING_OF_FILE)
+  {
+      global_offset = offset;
+  }
+  else if (start == CURRENT_POSITION)
+  {
+      fseek(file->fp, 0L, SEEK_CUR);
+      global_offset = ftell(file->fp) + offset;
+  }
+  else
+  {
+      fseek(file->fp, 0L, SEEK_END);
+      global_offset = ftell(file->fp) + offset;
+  }
+  
 
-
-
-
-  fserror=NONE; //no error yet
-  if (! file->fp || ! seek_file(file, start, offset)) //if file doesn't exist or 
+  fserror=NONE;
+  if (! file->fp || ! seek_file(file, start, offset)) 
   {
     fserror=WRITE_FAILED;
   }
-  // writing to the beginning of the file
-  else if (start == BEGINNING_OF_FILE)
+  // writing starting at very beginning of the file
+  else if (global_offset == 0L)
   {
     // first 2 bytes of data contains "MZ"
-    if (offset == 0L && strncmp(data, "MZ", 2) == 0) 
+    if (! strncmp(data, "MZ", 2)) 
     {
         fserror=ILLEGAL_MZ;
     }
-    // writing "Z" to second byte but "M" already exist as first byte
-    else if (offset == 1L && file->mem[0] == 'M' && *(char *)data == 'Z')
+    // writing "M" to second byte but "Z" already exist as first byte
+    else if (file->mem[1] == 'Z' && *(char *)data == 'M')
     {
         fserror = ILLEGAL_MZ;
     }
-    // writing "M" to first byte but "Z" already exist as first byte
-    else if (offset == 0L && file->mem[1] == 'Z' && *(char *)data == 'M')
-    {
-        fserror = ILLEGAL_MZ;
-    }
-    else 
+    // proceed to write
+    else
     {
         bytes_written=fwrite(data, 1, num_bytes, file->fp);
         if (bytes_written < num_bytes) 
@@ -148,12 +149,41 @@ unsigned long write_file_at(File file, void *data, unsigned long num_bytes,
         // if write is done to the beginning, set mem[] = to the first two bytes of the file
         read_file_from(file, file->mem, 2, BEGINNING_OF_FILE, 0L);
     }
-    return bytes_written;
   }
+  // writing starting at the second byte
+  else if (global_offset == 1L)
+  {
+    // writing "Z" to second byte but "M" already exist as first byte
+    if ( file->mem[0] == 'M' && ! strncmp(data,"Z",1))
+    {
+        fserror = ILLEGAL_MZ;
+    }
+    // proceed to write
+    else 
+    {
+        fseek(file->fp, 1L, SEEK_SET);
+        bytes_written=fwrite(data, 1, num_bytes, file->fp);
+        if (bytes_written < num_bytes) 
+        {
+            fserror=WRITE_FAILED;
+        }
+        // if write is done to the beginning, set mem[] = to the first two bytes of the file
+        read_file_from(file, file->mem, 2, BEGINNING_OF_FILE, 0L);
+    }
+  }
+  // not writing to the beginning, don't care
+  else
+  {
+        bytes_written=fwrite(data, 1, num_bytes, file->fp);
+        if (bytes_written < num_bytes) 
+        {
+            fserror=WRITE_FAILED;
+        }
+  }
+  
+  return bytes_written;
+  
 }
-
-
-
 
 
 
