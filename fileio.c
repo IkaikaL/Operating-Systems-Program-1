@@ -134,7 +134,7 @@ unsigned long write_file_at(File file, void *data, unsigned long num_bytes, Seek
         if (bytes_written < num_bytes){ //not necessary?
             fserror = WRITE_FAILED;
         }
-        file -> mem[0] = ((char*)data)[0]; //set mem[0] equal to first new first byte
+        file -> mem[0] = *(char*)data; //set mem[0] equal to first new first byte
         fseek(file -> fp, 0L + num_bytes, SEEK_SET); //reset position of pointer to second byte of file
     }
   }
@@ -148,7 +148,7 @@ unsigned long write_file_at(File file, void *data, unsigned long num_bytes, Seek
         if (bytes_written < num_bytes){ //not necessary?
             fserror = WRITE_FAILED;
         }
-        file -> mem[1] = ((char*)data)[1]; //set mem[1] equal to second byte
+        file -> mem[1] = *(char*)data; //set mem[1] equal to second byte
         fseek(file -> fp, 1L + num_bytes, SEEK_SET); //reset position of pointer to third byte of file
     }
   }
