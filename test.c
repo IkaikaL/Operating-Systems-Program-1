@@ -4,9 +4,9 @@
 int main(int argc, char *argv[]) {
   File f1, f2, f3;
 
-  system("rm one.dat two.dat three.dat");
+  system("rm testfile1 testfile2 testfile3");
 
-  f1=open_file("one.dat");
+  f1=open_file("testfile1");
   fs_print_error();
 
   write_file_at(f1, "pleaseworkpleasework", strlen("pleaseworkpleasework"), BEGINNING_OF_FILE, 0L);
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
   write_file_at(f1, "Z", 1, BEGINNING_OF_FILE, 1L);
   fs_print_error();
   
-  f2=open_file("two.dat");
+  f2=open_file("testfile2");
   fs_print_error();
 
   write_file_at(f2, "MZ", 2, CURRENT_POSITION, 0L);
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   // should catch error here
   fs_print_error();
   
-  f3=open_file("three.dat");
+  f3=open_file("testfile3");
   fs_print_error();
   
   write_file_at(f3, "thequickbrownfoxjumpedoverthelazydog", strlen("thequickbrownfoxjumpedoverthelazydog"), BEGINNING_OF_FILE, 0L);
