@@ -15,15 +15,9 @@ typedef enum {
 // file handle type
 // typedef FILE* File;
 
+typedef struct _FileInternal FileInternal; //given in class
 // file handle type
-typedef struct _FileInternal
-{
-    FILE* fp;
-    char mem[2]; //allows modeling writes to detect MZ
-}FileInternal;
-
-// file handle type
-typedef FileInternal* File;
+typedef FileInternal* File; //given in class
 
 
 // seek anchors

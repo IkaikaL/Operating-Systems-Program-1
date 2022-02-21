@@ -6,6 +6,10 @@
 //
 // GLOBALS
 //
+typedef struct _FileInternal{ //given in class
+    FILE* fp; //pointer to file
+    char mem[2]; //stores first two bytes to easily compare them
+}FileInternal;
 
 FSError fserror;
 
@@ -97,74 +101,63 @@ unsigned long read_file_from(File file, void *data, unsigned long num_bytes,
 // stored in the global 'fserror'.  If the write fails for any other
 // reason, the global 'fserror' is set to WRITE_FAILED, otherwise to
 // NONE.
-unsigned long write_file_at(File file, void *data, unsigned long num_bytes, 
-			     SeekAnchor start, long offset){
-  unsigned long bytes_written=0L;
+unsigned long write_file_at(File file, void *data, unsigned long num_bytes, SeekAnchor start, long offset){
+
+  unsigned long bytes_written = 0L; //track how many letters have been written
   
-  long global_offset = 0L;
-  
-  // calculate global_offset (offset from the beginning of the file)
+  long global_offset = 0L; //track the overall position
+
   if (start == BEGINNING_OF_FILE){
-      global_offset = offset;
+      global_offset = offset; //begins at beginning so offset is the only thing that matters
   }
   else if (start == CURRENT_POSITION){
-      fseek(file->fp, 0L, SEEK_CUR);
-      global_offset = ftell(file->fp) + offset;
+      fseek(file->fp, 0L, SEEK_CUR); //use fseek to find the current position for modification
+      global_offset = ftell(file->fp) + offset; //sets global_offset to current position + offset
   }
   else{
-      fseek(file->fp, 0L, SEEK_END);
-      global_offset = ftell(file->fp) + offset;
+      fseek(file->fp, 0L, SEEK_END); //use fseek to find the end of the data on the text file
+      global_offset = ftell(file->fp) + offset; //sets global_offset to end of file + offset
   }
-  
 
   fserror=NONE;
-  if (! file->fp || ! seek_file(file, start, offset)){
-    fserror=WRITE_FAILED;
+  if (! file->fp || ! seek_file(file, start, offset)){ //if given position is not in file or file doesn't exist return error
+    fserror = WRITE_FAILED;
   }
-  // writing starting at very beginning of the file
-  else if (global_offset == 0L){
-    // first 2 bytes of data contains "MZ"
-    if (! strncmp(data, "MZ", 2)){
-        fserror=ILLEGAL_MZ;
-    }
-    // writing "M" to second byte but "Z" already exist as first byte
-    else if (file->mem[1] == 'Z' && *(char *)data == 'M'){
+  else if (! strncmp(data, "MZ", 2)){ //if MZ is already in the beginning of the file return error
+    fserror = ILLEGAL_MZ;
+  }
+
+  else if (global_offset == 0L){ //if editing first byte of file
+    if (file->mem[1] == 'Z' && ! strncmp(data,"M",0)){ //if Z is already in position 1 make sure that M cannot be put into 0
         fserror = ILLEGAL_MZ;
     }
-    // proceed to write
     else{
-        bytes_written=fwrite(data, 1, num_bytes, file->fp);
-        if (bytes_written < num_bytes){
-            fserror=WRITE_FAILED;
+        bytes_written = fwrite(data, 1, num_bytes, file->fp); //update bytes_written as characters are written
+        if (bytes_written < num_bytes){ //not necessary?
+            fserror = WRITE_FAILED;
         }
-        // if write is done to the beginning, set mem[] = to the first two bytes of the file
-        read_file_from(file, file->mem, 2, BEGINNING_OF_FILE, 0L);
-        fseek(file -> fp, 0L + num_bytes, SEEK_SET);
+        read_file_from(file, file->mem, 2, BEGINNING_OF_FILE, 0L); //set mem[][] equal to first 2 bytes
+        fseek(file -> fp, 0L + num_bytes, SEEK_SET); //reset position of pointer to second byte of file
     }
   }
-  // writing starting at the second byte
-  else if (global_offset == 1L){
-    // writing "Z" to second byte but "M" already exist as first byte
-    if ( file->mem[0] == 'M' && ! strncmp(data,"Z",1)){
+  else if (global_offset == 1L){ //if editing second byte of file
+    if ( file->mem[0] == 'M' && ! strncmp(data,"Z",1)){ //if M is already in position 0 make sure that Z cannot be put into 1
         fserror = ILLEGAL_MZ;
     }
-    // proceed to write
     else{
-        fseek(file->fp, 1L, SEEK_SET);
-        bytes_written=fwrite(data, 1, num_bytes, file->fp);
-        if (bytes_written < num_bytes){
-            fserror=WRITE_FAILED;
+        fseek(file->fp, 1L, SEEK_SET); //go to second byte of file
+        bytes_written = fwrite(data, 1, num_bytes, file->fp); //add characters added to bytes_written
+        if (bytes_written < num_bytes){ //not necessary?
+            fserror = WRITE_FAILED;
         }
-        // if write is done to the beginning, set mem[] = to the first two bytes of the file
-        read_file_from(file, file->mem, 2, BEGINNING_OF_FILE, 0L);
-        fseek(file -> fp, 1L + num_bytes, SEEK_SET);
+        read_file_from(file, file->mem, 2, BEGINNING_OF_FILE, 0L); //set mem[][] equal to first 2 bytes
+        fseek(file -> fp, 1L + num_bytes, SEEK_SET); //reset position of pointer to third byte of file
     }
   }
-  // not writing to the beginning, don't care
   else{
-        bytes_written=fwrite(data, 1, num_bytes, file->fp);
-        if (bytes_written < num_bytes){
-            fserror=WRITE_FAILED;
+        bytes_written = fwrite(data, 1, num_bytes, file->fp); //passed all tests and can be added to file
+        if (bytes_written < num_bytes){ //not necessary?
+            fserror = WRITE_FAILED;
         }
   }
   
@@ -173,9 +166,6 @@ unsigned long write_file_at(File file, void *data, unsigned long num_bytes,
 }
 
 
-
-// print a string representation of the error indicated by the global
-// 'fserror'.
 void fs_print_error(void) {
   printf("FS ERROR: ");
   switch (fserror) {
