@@ -43,7 +43,6 @@ static int seek_file(File file, SeekAnchor start, long offset){
 // otherwise to NONE.
 File open_file(char *name){
   File ptr = malloc(sizeof(FileInternal));
-
   fserror=NONE;
   // try to open existing file
   ptr->fp=fopen(name, "r+");
@@ -75,8 +74,7 @@ void close_file(File file){
 // position is BEGINNING_OF_FILE, CURRENT_POSITION, or END_OF_FILE. If
 // the read operation fails, the global 'fserror' is set to READ_FAILED,
 // otherwise to NONE.
-unsigned long read_file_from(File file, void *data, unsigned long num_bytes, 
-			     SeekAnchor start, long offset){
+unsigned long read_file_from(File file, void *data, unsigned long num_bytes, SeekAnchor start, long offset){
 
   unsigned long bytes_read=0L;
 
@@ -136,7 +134,7 @@ unsigned long write_file_at(File file, void *data, unsigned long num_bytes, Seek
         if (bytes_written < num_bytes){ //not necessary?
             fserror = WRITE_FAILED;
         }
-        read_file_from(file, file->mem, 2, BEGINNING_OF_FILE, 0L); //set mem[][] equal to first 2 bytes
+        file -> mem[0] = ((char*)data)[0]; //set mem[0] equal to first new first byte
         fseek(file -> fp, 0L + num_bytes, SEEK_SET); //reset position of pointer to second byte of file
     }
   }
@@ -150,7 +148,7 @@ unsigned long write_file_at(File file, void *data, unsigned long num_bytes, Seek
         if (bytes_written < num_bytes){ //not necessary?
             fserror = WRITE_FAILED;
         }
-        read_file_from(file, file->mem, 2, BEGINNING_OF_FILE, 0L); //set mem[][] equal to first 2 bytes
+        file -> mem[1] = ((char*)data)[1]; //set mem[1] equal to second byte
         fseek(file -> fp, 1L + num_bytes, SEEK_SET); //reset position of pointer to third byte of file
     }
   }

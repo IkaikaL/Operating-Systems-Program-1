@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
   fs_print_error();
   
   write_file_at(f1, "MZ", 2, BEGINNING_OF_FILE, 0L);
-  // should catch error here
+  //error
   fs_print_error();
   
   write_file_at(f1, "Z", 1, BEGINNING_OF_FILE, 1L);
@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
 
   write_file_at(f2, "MZ", 2, CURRENT_POSITION, 0L);
   fs_print_error();
+  //error
 
   write_file_at(f2, "testingtestingtesting", strlen("testingtestingtesting"), BEGINNING_OF_FILE, 0L);
   fs_print_error();
@@ -32,8 +33,8 @@ int main(int argc, char *argv[]) {
   fs_print_error();
   
   write_file_at(f1, "M", 1, BEGINNING_OF_FILE, 0L);
-  // should catch error here
   fs_print_error();
+  //error
   
   f3=open_file("testfile3");
   fs_print_error();
@@ -42,14 +43,14 @@ int main(int argc, char *argv[]) {
   fs_print_error();
   
   write_file_at(f3, "MZ", 2, BEGINNING_OF_FILE, 0L);
-  // should catch error here
+  //error
   fs_print_error();
   
   write_file_at(f3, "M", 1, END_OF_FILE, -36L);
   fs_print_error();
   
   write_file_at(f3, "Z", 1, END_OF_FILE, -35L);
-  // should catch error here
+  //error
   fs_print_error();
 
   write_file_at(f3, "M", 1, END_OF_FILE, -10L);
